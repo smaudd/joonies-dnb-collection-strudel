@@ -11,6 +11,7 @@ function walkDir(dir, filelist = []) {
     if (stat.isDirectory()) {
       walkDir(filepath, filelist);
     } else if (/\.(wav|mp3|flac)$/i.test(file)) {
+      console.log("FILE",filepath)
       filelist.push(filepath);
     }
   });
@@ -28,7 +29,7 @@ function buildGroups(files) {
       // group by first folder
       const folder = parts[0];
       groups[folder] = groups[folder] || [];
-      groups[folder].push(parts.slice(1).join("/"));
+      groups[folder].push(rel);
     } else {
       // file at root level → go into _ungrouped
       groups["_ungrouped"] = groups["_ungrouped"] || [];
