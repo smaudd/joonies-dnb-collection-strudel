@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const BASE_URL = `https://raw.githubusercontent.com/smaudd/joonies-dnb-collection-strudel/main/`;
+const BASE_URL = `https://raw.githubusercontent.com/${process.env.GITHUB_REPOSITORY}/main/`;
 
 function walkDir(dir, filelist = []) {
   const files = fs.readdirSync(dir);
@@ -17,40 +17,39 @@ function walkDir(dir, filelist = []) {
   return filelist;
 }
 
-function groupFiles(files) {
-  const groups = {};
+// Build a nested tree from paths
+function buildTree(files) {
+  const tree = {};
 
-  files.forEach((file) => {
-    const rel = path.relative(".", file).replace(/\\/g, "/"); // relative path
+  for (const file of files) {
+    const rel = path.relative(".", file).replace(/\\/g, "/");
     const parts = rel.split("/");
-    if (parts.length > 1) {
-      const folder = parts[0];
-      groups[folder] = groups[folder] || [];
-      groups[folder].push(parts.slice(1).join("/"));
-    } else {
-      // Try grouping by prefix before "_"
-      const [prefix] = parts[0].split("_");
-      if (prefix && prefix !== parts[0]) {
-        groups[prefix] = groups[prefix] || [];
-        groups[prefix].push(parts[0]);
+
+    let current = tree;
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
+      if (i === parts.length - 1) {
+        // It's a file
+        current[part] = `${rel}`;
       } else {
-        groups["_ungrouped"] = groups["_ungrouped"] || [];
-        groups["_ungrouped"].push(parts[0]);
+        // It's a folder
+        current[part] = current[part] || {};
+        current = current[part];
       }
     }
-  });
+  }
 
-  return groups;
+  return tree;
 }
 
 function main() {
   const allFiles = walkDir(".");
-  const grouped = groupFiles(allFiles);
+  const tree = buildTree(allFiles);
 
-  const output = { _base: BASE_URL, ...grouped };
+  const output = { _base: BASE_URL, ...tree };
 
   fs.writeFileSync("strudel.json", JSON.stringify(output, null, 2));
-  console.log("✅ strudel.json generated");
+  console.log("✅ strudel.json generated with folder structure");
 }
 
 main();
