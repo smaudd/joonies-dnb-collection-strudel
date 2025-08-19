@@ -17,40 +17,36 @@ function walkDir(dir, filelist = []) {
   return filelist;
 }
 
-// Build a nested tree from paths
-function buildTree(files) {
-  const tree = {};
+function buildGroups(files) {
+  const groups = {};
 
   for (const file of files) {
-    const rel = path.relative(".", file).replace(/\\/g, "/");
+    const rel = path.relative(".", file).replace(/\\/g, "/"); // relative path
     const parts = rel.split("/");
 
-    let current = tree;
-    for (let i = 0; i < parts.length; i++) {
-      const part = parts[i];
-      if (i === parts.length - 1) {
-        // It's a file
-        current[part] = `${rel}`;
-      } else {
-        // It's a folder
-        current[part] = current[part] || {};
-        current = current[part];
-      }
+    if (parts.length > 1) {
+      // group by first folder
+      const folder = parts[0];
+      groups[folder] = groups[folder] || [];
+      groups[folder].push(parts.slice(1).join("/"));
+    } else {
+      // file at root level → go into _ungrouped
+      groups["_ungrouped"] = groups["_ungrouped"] || [];
+      groups["_ungrouped"].push(parts[0]);
     }
   }
 
-  return tree;
+  return groups;
 }
 
 function main() {
   const allFiles = walkDir(".");
-  const tree = buildTree(allFiles);
+  const grouped = buildGroups(allFiles);
 
-  const output = { _base: BASE_URL, ...tree };
+  const output = { _base: BASE_URL, ...grouped };
 
   fs.writeFileSync("strudel.json", JSON.stringify(output, null, 2));
-  console.log("✅ strudel.json generated with folder structure");
+  console.log("✅ strudel.json generated (grouped by top-level folder)");
 }
 
 main();
-
