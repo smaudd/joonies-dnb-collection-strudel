@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const BASE_URL = `https://raw.githubusercontent.com/${process.env.GITHUB_REPOSITORY}/main/`;
+const BASE_URL = `https://raw.githubusercontent.com/smaudd/joonies-dnb-collection-strudel/main/`;
 
 function walkDir(dir, filelist = []) {
   const files = fs.readdirSync(dir);
